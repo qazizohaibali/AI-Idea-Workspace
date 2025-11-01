@@ -1,65 +1,104 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { FaRegLightbulb } from "react-icons/fa";
+import { PiSignOutFill } from "react-icons/pi";
+import IdeaForm from "@/components/IdeaForm";
+import IdeasCards from "@/components/IdeasCards";
+import { Idea } from "@/types/idea";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Home() {
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function handleDelete(id: string) {
+    try {
+      const res = await fetch(`/api/ideas`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setIdeas((prevIdeas) => prevIdeas.filter((idea) => idea.id !== id));
+        toast.success("Idea deleted successfully");
+      } else {
+        toast.error("Failed to delete idea");
+      }
+    } catch (error) {
+      console.error("Error deleting idea:", error);
+    }
+  }
+
+  const fetchIdeas = async () => {
+    try {
+      const res = await fetch("/api/ideas");
+      const data = await res.json();
+      console.log("Fetched ideas:", data);
+      setIdeas(data);
+    } catch (error) {
+      console.error("Error fetching ideas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
+
+  useEffect(() => {
+    fetchIdeas();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="bg-[#FAFBFD] min-h-screen">
+      <Toaster />
+      <div className="flex justify-between items-center p-4 lg:p-5 shadow border-b border-gray-300">
+        <div className="flex items-center gap-1">
+          <FaRegLightbulb size={30} color="#7C3BED" />
+          <p className="text-xl lg:text-2xl font-semibold">AI Idea WorkSpace</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <button
+          onClick={handleLogOut}
+          className="flex items-center justify-center gap-1 cursor-pointer"
+        >
+          <PiSignOutFill size={20} />
+          <p className="font-semibold text-sm lg:text-base">Log Out</p>
+        </button>
+      </div>
+
+      <div className="px-10">
+        <div className="flex lg:flex-row flex-col lg:items-center gap-4 lg:gap-0 justify-between py-10">
+          <div>
+            <p className="text-[30px] lg:text-[40px] font-bold">Your Ideas</p>
+            <p className="text-lg lg:text-xl opacity-50">
+              Create and manage your project ideas with AI assistance
+            </p>
+          </div>
+
+          <IdeaForm buttonTitle="New Idea" fetchIdeas={fetchIdeas} />
         </div>
-      </main>
+
+        {loading ? (
+          <p className="text-gray-500 text-center py-10">Loading ideas...</p>
+        ) : ideas.length === 0 ? (
+          <div className="bg-white py-10 h-[400px] rounded-3xl border border-gray-200 flex flex-col items-center justify-center">
+            <FaRegLightbulb size={50} color="#999999" />
+            <p className="text-2xl py-1 font-semibold">No ideas yet</p>
+            <p className="py-2 font-normal opacity-50">
+              Create your first idea to get started
+            </p>
+            <IdeaForm buttonTitle="Create Idea" fetchIdeas={fetchIdeas} />
+          </div>
+        ) : (
+          <IdeasCards ideas={ideas} onDelete={handleDelete} />
+        )}
+      </div>
     </div>
   );
 }
