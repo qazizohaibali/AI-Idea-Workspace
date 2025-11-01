@@ -180,7 +180,7 @@ export default function ChatBox({ ideaId }: { ideaId: string }) {
           td: ({ node, ...props }) => (
             <td className={`py-2 px-3 align-top ${baseTextClass}`} {...props} />
           ),
-          code: ({ node, inline, ...props }) =>
+          code: ({ node, inline, ...props }: { node?: any; inline?: boolean; [key: string]: any }) =>
             inline ? (
               <code
                 className={`px-1 rounded text-sm ${codeBg} ${

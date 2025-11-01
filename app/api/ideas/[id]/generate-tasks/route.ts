@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import { callOpenRouterChat } from "@/app/lib/openrouter";
 
@@ -12,15 +12,21 @@ function extractFirstJson(text: string) {
   }
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const resolvedParams = await params;
+// export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await context.params;
   const ideaId = resolvedParams?.id;
-  if (!ideaId) return NextResponse.json({ message: "Missing id" }, { status: 400 });
+  if (!ideaId)
+    return NextResponse.json({ message: "Missing id" }, { status: 400 });
 
   const idea = await prisma.idea.findUnique({ where: { id: ideaId } });
-  if (!idea) return NextResponse.json({ message: "Idea not found" }, { status: 404 });
+  if (!idea)
+    return NextResponse.json({ message: "Idea not found" }, { status: 404 });
 
-  const { numTasks = 5 } = (await req.json().catch(() => ({}))) ?? {};
+  const { numTasks = 5 } = (await request.json().catch(() => ({}))) ?? {};
 
   const system = `You are an assistant that returns ONLY valid JSON when asked.`;
   const userPrompt = `Given the idea below, return EXACTLY ${numTasks} tasks as a JSON array. Each task must be an object with keys:
@@ -50,17 +56,28 @@ Example:
       model: process.env.OPENROUTER_MODEL,
     });
 
-    const text = typeof assistant === "string" ? assistant : (typeof raw === "string" ? raw : JSON.stringify(raw));
+    const text =
+      typeof assistant === "string"
+        ? assistant
+        : typeof raw === "string"
+        ? raw
+        : JSON.stringify(raw);
     let parsed: any;
     try {
       parsed = extractFirstJson(text);
     } catch (err) {
       console.error("Failed to parse JSON from model:", err, "raw:", text);
-      return NextResponse.json({ message: "Failed to parse JSON from model" }, { status: 500 });
+      return NextResponse.json(
+        { message: "Failed to parse JSON from model" },
+        { status: 500 }
+      );
     }
 
     if (!Array.isArray(parsed)) {
-      return NextResponse.json({ message: "Model did not return an array" }, { status: 500 });
+      return NextResponse.json(
+        { message: "Model did not return an array" },
+        { status: 500 }
+      );
     }
 
     const tasksToCreate = parsed.slice(0, 50).map((t: any) => ({
@@ -86,21 +103,23 @@ Example:
     return NextResponse.json({ tasks: created, rawModel: raw });
   } catch (err: any) {
     console.error("generate-tasks error:", err);
-    return NextResponse.json({ message: "Task generation failed", error: String(err?.message ?? err) }, { status: 500 });
+    return NextResponse.json(
+      { message: "Task generation failed", error: String(err?.message ?? err) },
+      { status: 500 }
+    );
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: any } 
-) {
-  const resolvedParams = await params;
-  const id = resolvedParams?.id;
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params; // ✅ await because params is a Promise
 
   console.log("Fetching tasks for idea with id:", id);
 
   if (!id) {
-    return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing id parameter" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -112,6 +131,9 @@ export async function GET(
     return NextResponse.json({ tasks });
   } catch (error) {
     console.error("Error fetching tasks:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

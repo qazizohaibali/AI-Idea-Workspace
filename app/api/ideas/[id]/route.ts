@@ -1,17 +1,19 @@
 import prisma from "@/app/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: Request,
-  { params }: { params: any }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const resolvedParams = await params;
-  const id = resolvedParams?.id;
+  const { id } = await context.params; // ✅ await because params is a Promise
 
   console.log("Fetching idea with id:", id);
 
   if (!id) {
-    return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing id parameter" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -26,6 +28,9 @@ export async function GET(
     return NextResponse.json(idea);
   } catch (error) {
     console.error("Error fetching idea:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

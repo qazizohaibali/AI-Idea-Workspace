@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import { callOpenRouterChat } from "@/app/lib/openrouter";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const resolvedParams = await params;
-  const id = resolvedParams?.id;
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params; // ✅ await because params is a Promise
 
   if (!id) return NextResponse.json({ message: "Missing id" }, { status: 400 });
 
@@ -15,14 +17,23 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   return NextResponse.json({ messages });
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const resolvedParams = await params;
+// export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await context.params;
   const ideaId = resolvedParams?.id;
-  if (!ideaId) return NextResponse.json({ message: "Missing id" }, { status: 400 });
+  if (!ideaId)
+    return NextResponse.json({ message: "Missing id" }, { status: 400 });
 
-  const body = await req.json().catch(() => ({}));
+  const body = await request.json().catch(() => ({}));
   const { role, content } = body ?? {};
-  if (!content || !role) return NextResponse.json({ message: "Missing role/content" }, { status: 400 });
+  if (!content || !role)
+    return NextResponse.json(
+      { message: "Missing role/content" },
+      { status: 400 }
+    );
 
   try {
     const userMsg = await prisma.message.create({
@@ -40,7 +51,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     const messagesForModel = history.map((m) => ({
-      role: m.role === "assistant" ? "assistant" : m.role === "user" ? "user" : "system",
+      role:
+        m.role === "assistant"
+          ? "assistant"
+          : m.role === "user"
+          ? "user"
+          : "system",
       content: m.content,
     }));
     messagesForModel.push({ role: "user", content });
@@ -51,7 +67,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       model: process.env.OPENROUTER_MODEL,
     });
 
-    const assistantText = typeof assistant === "string" ? assistant : (typeof raw === "string" ? raw : JSON.stringify(raw));
+    const assistantText =
+      typeof assistant === "string"
+        ? assistant
+        : typeof raw === "string"
+        ? raw
+        : JSON.stringify(raw);
 
     const assistantMsg = await prisma.message.create({
       data: {
@@ -64,7 +85,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ assistantMessage: assistantMsg });
   } catch (err: any) {
     console.error("POST /messages error:", err);
-    return NextResponse.json({ message: "AI call failed", error: String(err?.message ?? err) }, { status: 500 });
+    return NextResponse.json(
+      { message: "AI call failed", error: String(err?.message ?? err) },
+      { status: 500 }
+    );
   }
 }
-

@@ -1,5 +1,5 @@
 import prisma from "@/app/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -42,39 +42,39 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const id = params.id;
-    const body = await req.json();
-    const { title, description, tags } = body;
+// export async function PUT(
+//   req: Request,
+//   { params }: { params: { id: string } }
+// ) {
+//   try {
+//     const id = params.id;
+//     const body = await req.json();
+//     const { title, description, tags } = body;
 
-    if (!title || !description) {
-      return NextResponse.json({ message: "Missing fields" }, { status: 400 });
-    }
+//     if (!title || !description) {
+//       return NextResponse.json({ message: "Missing fields" }, { status: 400 });
+//     }
 
-    const updated = await prisma.idea.update({
-      where: { id },
-      data: {
-        title,
-        description,
-        tags,
-      },
-    });
+//     const updated = await prisma.idea.update({
+//       where: { id },
+//       data: {
+//         title,
+//         description,
+//         tags,
+//       },
+//     });
 
-    return NextResponse.json({ idea: updated });
-  } catch (error) {
-    console.error("PUT /api/ideas/[id] error:", error);
-    return NextResponse.json(
-      { message: "Error updating idea" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json({ idea: updated });
+//   } catch (error) {
+//     console.error("PUT /api/ideas/[id] error:", error);
+//     return NextResponse.json(
+//       { message: "Error updating idea" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
     const { id } = await req.json();
     console.log("----:Deleting idea with id:----", id);
