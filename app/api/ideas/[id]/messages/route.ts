@@ -50,7 +50,7 @@ export async function POST(
       take: 30,
     });
 
-    const messagesForModel = history.map((m) => ({
+    const messagesForModel = history.map((m: { role: string; content: string }) => ({
       role:
         m.role === "assistant"
           ? "assistant"
