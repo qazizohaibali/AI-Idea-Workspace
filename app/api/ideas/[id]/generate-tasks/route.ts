@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 import { callOpenRouterChat } from "@/app/lib/openrouter";
 
+export const runtime = "nodejs";
+
 function extractFirstJson(text: string) {
   try {
     return JSON.parse(text);

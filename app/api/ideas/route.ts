@@ -1,6 +1,8 @@
 import prisma from "@/app/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   try {
     const ideas = await prisma.idea.findMany({
