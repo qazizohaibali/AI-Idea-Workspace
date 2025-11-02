@@ -10,24 +10,31 @@ export async function POST(req: Request) {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return NextResponse.json({ message: "Missing credentials" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Missing credentials" },
+        { status: 400 }
+      );
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.hashedPassword) {
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { message: "Invalid email or password" },
+        { status: 401 }
+      );
     }
 
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
     if (!isMatch) {
-      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { message: "Invalid email or password" },
+        { status: 401 }
+      );
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     return NextResponse.json({
       message: "Login successful",
@@ -36,6 +43,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Server error", error: error },
+      { status: 500 }
+    );
   }
 }
