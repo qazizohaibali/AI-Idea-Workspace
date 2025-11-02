@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PostRequest } from "@/app/useRequest";
 import toast, { Toaster } from "react-hot-toast";
-import { LoginFormData } from "@/types";
+import { LoginFormData, User } from "@/types";
+import userStore from "@/store/user.store";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setLoginUser } = userStore();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -22,13 +24,15 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      
+
       const res = await PostRequest("/api/auth/login", { ...formData });
 
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+        console.log("USER", data.user);
+        setLoginUser(data.user);
         router.push("/");
         toast.success("Logged in successfully");
       } else {

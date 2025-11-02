@@ -3,6 +3,12 @@ export interface LoginFormData {
   password: string;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface Idea {
   id: string;
   title: string;
