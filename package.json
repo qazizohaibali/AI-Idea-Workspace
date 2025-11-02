@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "vercel-build": "npx prisma generate && npx prisma db push && next build",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/extension-accelerate": "^2.0.2",
