@@ -49,7 +49,7 @@ export default function LoginPage() {
   return (
     <div className="bg-white">
       <Toaster />
-      <div className="w-[40%] mx-auto min-h-screen flex items-center justify-center p-6">
+      <div className="w-full lg:w-[40%] mx-auto min-h-screen flex items-center justify-center p-6">
         <div className="w-full max-w-[450px] p-10 shadow-2xl rounded-2xl">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
             Welcome back
