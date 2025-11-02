@@ -3,38 +3,40 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PostRequest } from "@/app/useRequest";
+import toast, { Toaster } from "react-hot-toast";
+import { LoginFormData } from "@/types";
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData }),
-      });
+      setLoading(true);
+      
+      const res = await PostRequest("/api/auth/login", { ...formData });
 
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         router.push("/");
+        toast.success("Logged in successfully");
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.message || "Login failed");
       }
-    } catch (err) {
-      setError("Network error");
+    } catch (error) {
+      toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -42,6 +44,7 @@ export default function LoginPage() {
 
   return (
     <div className="bg-white">
+      <Toaster />
       <div className="w-[40%] mx-auto min-h-screen flex items-center justify-center p-6">
         <div className="w-full max-w-[450px] p-10 shadow-2xl rounded-2xl">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
@@ -91,10 +94,7 @@ export default function LoginPage() {
                 {loading ? "Logging in..." : "Login"}
               </button>
             </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
           </form>
-
           <div className="mt-6 text-center text-gray-500 text-sm">
             Dont have an account?{" "}
             <Link href="/signup" className="font-semibold text-gray-900">

@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast, { Toaster } from "react-hot-toast";
+import { PostRequest } from "@/app/useRequest";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,29 +16,22 @@ export default function SignupPage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData }),
-      });
+      const res = await PostRequest("/api/auth/signup", { ...formData });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data?.message || "Signup failed");
-        setLoading(false);
-        return;
+      if (res.ok) {
+        router.push("/login");
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.message || "Signup failed");
       }
-      router.push("/login");
     } catch (err) {
-      setError("Network error");
+      toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -44,6 +39,7 @@ export default function SignupPage() {
 
   return (
     <div className="bg-white">
+      <Toaster />
       <div className="w-[40%] mx-auto min-h-screen flex items-center justify-center p-6">
         <div className="w-full max-w-[450px] p-10 shadow-2xl rounded-2xl">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
@@ -107,7 +103,6 @@ export default function SignupPage() {
               </button>
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
           </form>
 
           <div className="mt-6 text-center text-gray-500 text-sm">

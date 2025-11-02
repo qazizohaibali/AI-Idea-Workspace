@@ -7,43 +7,46 @@ import IdeaForm from "@/components/IdeaForm";
 import IdeasCards from "@/components/IdeasCards";
 import { Idea } from "@/types/idea";
 import toast, { Toaster } from "react-hot-toast";
+import { DeleteRequest, GetRequest } from "./useRequest";
+import Spinner from "@/components/Spinner";
 
 export default function Home() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  async function handleDelete(id: string) {
-    try {
-      const res = await fetch(`/api/ideas`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-      if (res.ok) {
-        setIdeas((prevIdeas) => prevIdeas.filter((idea) => idea.id !== id));
-        toast.success("Idea deleted successfully");
-      } else {
-        toast.error("Failed to delete idea");
-      }
-    } catch (error) {
-      console.error("Error deleting idea:", error);
-    }
-  }
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchIdeas = async () => {
     try {
-      const res = await fetch("/api/ideas");
-      const data = await res.json();
-      console.log("Fetched ideas:", data);
-      setIdeas(data);
+      const res = await GetRequest("/api/ideas");
+
+      if (res.ok) {
+        const data = await res.json();
+        setIdeas(data);
+      } else {
+        const err = await res.json();
+        console.log(err.message || "Failed to fetch ideas");
+      }
     } catch (error) {
       console.error("Error fetching ideas:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  async function handleDelete(id: string) {
+    try {
+      const res = await DeleteRequest(`/api/ideas`, { id });
+
+      if (res.ok) {
+        setIdeas((prevIdeas) => prevIdeas.filter((idea) => idea.id !== id));
+        toast.success("Idea deleted successfully");
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "Failed to delete idea");
+      }
+    } catch (error) {
+      console.error("Error deleting idea:", error);
+    }
+  }
 
   const handleLogOut = () => {
     localStorage.removeItem("token");
@@ -80,12 +83,15 @@ export default function Home() {
               Create and manage your project ideas with AI assistance
             </p>
           </div>
-
           <IdeaForm buttonTitle="New Idea" fetchIdeas={fetchIdeas} />
         </div>
 
         {loading ? (
-          <p className="text-gray-500 text-center py-10">Loading ideas...</p>
+          // <p className="text-gray-500 text-center py-10">Loading ideas...</p>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            {" "}
+            <Spinner />
+          </div>
         ) : ideas.length === 0 ? (
           <div className="bg-white py-10 h-[400px] rounded-3xl border border-gray-200 flex flex-col items-center justify-center">
             <FaRegLightbulb size={50} color="#999999" />

@@ -7,36 +7,26 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { RiSendPlaneFill } from "react-icons/ri";
 import Spinner from "./Spinner";
-
-type Message = {
-  id: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  createdAt?: string;
-};
+import { Message } from "@/types";
+import { GetRequest } from "@/app/useRequest";
 
 export default function ChatBox({ ideaId }: { ideaId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
+  const [input, setInput] = useState<string>("");
+  const [sending, setSending] = useState<boolean>(false);
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch(`/api/ideas/${ideaId}/messages`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setMessages(data.messages ?? data);
-      } catch (err) {
-      }
-    };
-    load();
-  }, [ideaId]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const fetchMessages = async () => {
+    try {
+      const res = await GetRequest(`/api/ideas/${ideaId}/messages`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setMessages(data.messages ?? data);
+    } catch (err) {
+      console.error("fetchMessages error:", err);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -180,7 +170,15 @@ export default function ChatBox({ ideaId }: { ideaId: string }) {
           td: ({ node, ...props }) => (
             <td className={`py-2 px-3 align-top ${baseTextClass}`} {...props} />
           ),
-          code: ({ node, inline, ...props }: { node?: any; inline?: boolean; [key: string]: any }) =>
+          code: ({
+            node,
+            inline,
+            ...props
+          }: {
+            node?: any;
+            inline?: boolean;
+            [key: string]: any;
+          }) =>
             inline ? (
               <code
                 className={`px-1 rounded text-sm ${codeBg} ${
@@ -219,13 +217,21 @@ export default function ChatBox({ ideaId }: { ideaId: string }) {
     );
   }
 
+  useEffect(() => {
+    fetchMessages();
+  }, [ideaId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto space-y-4 px-1">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-400">
             <div className="text-center">
-              <svg
+              {/* <svg
                 className="mx-auto mb-3"
                 width="52"
                 height="52"
@@ -260,7 +266,11 @@ export default function ChatBox({ ideaId }: { ideaId: string }) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-              </svg>
+              </svg> */}
+              <div className="flex items-center justify-center mb-4">
+                {" "}
+                <AiFillOpenAI size={40} className="opacity-90" />
+              </div>
               <div className="text-lg font-medium">
                 Start a conversation with the AI assistant
               </div>

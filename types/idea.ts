@@ -5,4 +5,3 @@ export interface Idea {
     tags: string[];
     createdAt?: string;
   }
-  

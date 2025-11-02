@@ -6,15 +6,8 @@ import { useEffect, useState } from "react";
 import { GoArrowLeft } from "react-icons/go";
 import ChatBox from "@/components/ChatBox";
 import TasksPanel from "@/components/TasksPanel";
-
-type Idea = {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  createdAt?: string;
-  updatedAt?: string;
-};
+import { GetRequest } from "@/app/useRequest";
+import { Idea } from "@/types";
 
 export default function IdeaPage() {
   const params = useParams();
@@ -23,20 +16,26 @@ export default function IdeaPage() {
   const [idea, setIdea] = useState<Idea | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (!id) return;
-    const fetchIdea = async () => {
-      try {
-        const res = await fetch(`/api/ideas/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch idea");
+  const fetchIdea = async () => {
+    try {
+      const res = await GetRequest(`/api/ideas/${id}`);
+
+      if (res.ok) {
         const data = await res.json();
         setIdea(data.idea ?? data);
-      } catch (err) {
-        console.error("fetchIdea error:", err);
-      } finally {
-        setLoading(false);
+      } else {
+        const errorData = await res.json();
+        console.error(errorData.message || "Error fetching idea:");
       }
-    };
+    } catch (err) {
+      console.error("fetchIdea error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!id) return;
     fetchIdea();
   }, [id]);
 
@@ -62,7 +61,6 @@ export default function IdeaPage() {
             </header>
 
             <div className="grid grid-cols-12 gap-6">
-              {/* Chat / AI Assistant (left) */}
               <div className="col-span-12 lg:col-span-8">
                 <div className="bg-white rounded-2xl shadow border border-gray-200 h-[72vh] flex flex-col">
                   <div className="px-6 py-5 border-b">
@@ -78,7 +76,6 @@ export default function IdeaPage() {
                 </div>
               </div>
 
-              {/* Tasks (right) */}
               <div className="col-span-12 lg:col-span-4">
                 <div className="bg-white rounded-2xl shadow border border-gray-200 p-6 h-[72vh] flex flex-col">
                   <TasksPanel ideaId={idea.id} />

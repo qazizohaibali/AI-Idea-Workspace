@@ -16,7 +16,7 @@ export default function IdeasCards({ ideas, onDelete }: IdeasCardsProps) {
         <Link
           href={`/ideas/${idea.id}`}
           key={idea.id}
-          className="block bg-white rounded-2xl shadow p-6 border border-gray-200 hover:shadow-md"
+          className="block bg-white rounded-2xl shadow p-6 border border-gray-200 hover:shadow-xl transition-shadow duration-200"
           aria-label={`Open idea ${idea.title}`}
         >
           <div className="flex items-center justify-between">

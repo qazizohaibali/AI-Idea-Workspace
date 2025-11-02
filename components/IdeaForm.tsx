@@ -4,22 +4,18 @@ import { useState, ChangeEvent } from "react";
 import { HiOutlinePlus } from "react-icons/hi";
 import Modal from "./Modal";
 import toast from "react-hot-toast";
+import { IdeaFormData } from "@/types";
+import { PostRequest } from "@/app/useRequest";
 
 interface IdeaFormProps {
   buttonTitle: string;
   fetchIdeas: () => void;
 }
 
-interface FormData {
-  title: string;
-  description: string;
-  tags: string[];
-}
-
 export default function IdeaForm({ buttonTitle, fetchIdeas }: IdeaFormProps) {
   const [open, setOpen] = useState<boolean>(false);
   const [addTag, setAddTag] = useState<string>("");
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<IdeaFormData>({
     title: "",
     description: "",
     tags: [],
@@ -39,25 +35,19 @@ export default function IdeaForm({ buttonTitle, fetchIdeas }: IdeaFormProps) {
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch("/api/ideas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        console.error("Failed to save idea:", data);
-        toast.error("Failed to save idea");
-        return;
+      const res = await PostRequest("/api/ideas", formData);
+      if (res.ok) {
+        setOpen(false);
+        setFormData({ title: "", description: "", tags: [] });
+        toast.success("Idea saved successfully");
+        fetchIdeas();
+      } else {
+        const error = await res.json();
+        toast.error(error.message || "Failed to save idea");
       }
-
-      toast.success("Idea saved successfully");
-      setOpen(false);
-      setFormData({ title: "", description: "", tags: [] });
-      fetchIdeas();
     } catch (error) {
-      toast.error("Something went wrong");
+      console.error("Error saving idea:", error);
+      toast.error("An error occurred while saving the idea");
     }
   };
 
