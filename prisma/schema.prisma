@@ -1,6 +1,12 @@
+// generator client {
+//   provider = "prisma-client"
+//   output   = "../app/generated/prisma"
+// }
+
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  output        = "../app/generated/prisma"
 }
 
 datasource db {
@@ -14,7 +20,7 @@ model User {
   name           String?
   hashedPassword String?
   createdAt      DateTime @default(now())
-  ideas          Idea[] 
+  ideas          Idea[]
 
   @@map("users")
 }
@@ -25,8 +31,8 @@ model Idea {
   owner       User?    @relation(fields: [ownerId], references: [id])
   title       String
   description String
-  tags        String[] 
-  status      String? 
+  tags        String[]
+  status      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -41,7 +47,7 @@ model Message {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   ideaId    String   @db.ObjectId
   idea      Idea?    @relation(fields: [ideaId], references: [id])
-  role      String 
+  role      String
   content   String
   metadata  Json?
   createdAt DateTime @default(now())
@@ -56,8 +62,8 @@ model Task {
   idea        Idea?    @relation(fields: [ideaId], references: [id])
   title       String
   description String?
-  priority    Int 
-  status      String   @default("todo") 
+  priority    Int
+  status      String   @default("todo")
   createdAt   DateTime @default(now())
 
   @@index([ideaId])
