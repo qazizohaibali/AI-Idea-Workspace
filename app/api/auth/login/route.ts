@@ -10,14 +10,12 @@ const JWT_SECRET = process.env.JWT_SECRET || "mysecretkey";
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
-
     if (!email || !password) {
       return NextResponse.json(
         { message: "Missing credentials" },
         { status: 400 }
       );
     }
-
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.hashedPassword) {
       return NextResponse.json(
@@ -25,7 +23,6 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
-
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
     if (!isMatch) {
       return NextResponse.json(

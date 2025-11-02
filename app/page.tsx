@@ -9,10 +9,14 @@ import { Idea } from "@/types/idea";
 import toast, { Toaster } from "react-hot-toast";
 import { DeleteRequest, GetRequest } from "./useRequest";
 import Spinner from "@/components/Spinner";
+import userStore from "@/store/user.store";
+import { redirect } from "next/navigation";
 
 export default function Home() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const { loginUser } = userStore();
 
   const fetchIdeas = async () => {
     try {
@@ -57,6 +61,10 @@ export default function Home() {
   useEffect(() => {
     fetchIdeas();
   }, []);
+
+  if (!loginUser) {
+    redirect("/login");
+  }
 
   return (
     <div className="bg-[#FAFBFD] min-h-screen">
