@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/app/lib/prisma";
+import prisma from "../../../../lib/prisma";
 import { callOpenRouterChat } from "@/app/lib/openrouter";
 
 export const runtime = "nodejs";
@@ -52,15 +52,17 @@ export async function POST(
       take: 30,
     });
 
-    const messagesForModel = history.map((m: { role: string; content: string }) => ({
-      role:
-        m.role === "assistant"
-          ? "assistant"
-          : m.role === "user"
-          ? "user"
-          : "system",
-      content: m.content,
-    }));
+    const messagesForModel = history.map(
+      (m: { role: string; content: string }) => ({
+        role:
+          m.role === "assistant"
+            ? "assistant"
+            : m.role === "user"
+            ? "user"
+            : "system",
+        content: m.content,
+      })
+    );
     messagesForModel.push({ role: "user", content });
 
     const { raw, assistant } = await callOpenRouterChat(messagesForModel, {

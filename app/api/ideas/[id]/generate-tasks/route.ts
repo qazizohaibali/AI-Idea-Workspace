@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/app/lib/prisma";
+import prisma from "../../../../lib/prisma";
 import { callOpenRouterChat } from "@/app/lib/openrouter";
 
 export const runtime = "nodejs";
@@ -112,7 +112,10 @@ Example:
   }
 }
 
-export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const { id } = await context.params; // ✅ await because params is a Promise
 
   console.log("Fetching tasks for idea with id:", id);
